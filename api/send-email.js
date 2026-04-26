@@ -1,4 +1,5 @@
 const nodemailer = require("nodemailer");
+const { emailTemplate } = require("./templates/contactTemplate");
 
 module.exports = async (req, res) => {
   res.setHeader("Access-Control-Allow-Origin", "*");
@@ -14,7 +15,8 @@ module.exports = async (req, res) => {
   }
 
   try {
-    const { firstName, lastName, email, message } = req.body;
+    const { firstName, lastName, email, phone, organization, message } =
+      req.body;
 
     if (!firstName || !lastName || !email) {
       return res.status(400).json({ message: "Missing required fields" });
@@ -30,6 +32,15 @@ module.exports = async (req, res) => {
       },
     });
 
+    const htmlContent = emailTemplate({
+      firstName,
+      lastName,
+      email,
+      phone,
+      organization,
+      message,
+    });
+
     await transporter.verify();
 
     await transporter.sendMail({
@@ -37,11 +48,7 @@ module.exports = async (req, res) => {
       to: process.env.ADMIN_EMAIL,
       replyTo: email,
       subject: `New Contact from ${firstName} ${lastName}`,
-      text: `
-Name: ${firstName} ${lastName}
-Email: ${email}
-Message: ${message}
-      `,
+      html: htmlContent,
     });
 
     return res.status(200).json({
