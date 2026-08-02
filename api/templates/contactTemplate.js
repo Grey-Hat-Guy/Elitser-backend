@@ -1,4 +1,6 @@
 function emailTemplate(data) {
+  let year = new Date().getFullYear();
+
   let template = `
   <!DOCTYPE html>
 <html>
@@ -87,7 +89,7 @@ function emailTemplate(data) {
           <tr>
             <td style="padding:20px 32px 24px 32px; text-align:center;">
               <p style="margin:0; font-size:12px; color:#9ca3af;">
-                &copy; 2025 Elitser Technologies · All Rights Reserved
+                &copy; ${year} Elitser Technologies · All Rights Reserved
               </p>
               <p style="margin:6px 0 0; font-size:11px; color:#cbd5e1;">
                 This is an automated notification from your website contact form.
