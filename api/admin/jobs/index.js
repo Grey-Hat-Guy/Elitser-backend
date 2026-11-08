@@ -14,7 +14,7 @@ module.exports = async (req, res) => {
   if (!admin) return;
 
   try {
-    const result = await req.query(
+    const result = await pool.query(
       `SELECT * FROM jobs ORDER BY created_at DESC`,
     );
 
