@@ -1,8 +1,10 @@
-const crypto = require("crypto");
 const pool = require("../../../lib/db");
 const { requireAdmin } = require("../../../lib/auth");
+const { applyCors } = require("../../../lib/cors");
 
 module.exports = async (req, res) => {
+  if (!applyCors(req, res)) return;
+
   if (!["GET", "POST"].includes(req.method)) {
     return res.status(405).json({
       success: false,
@@ -28,6 +30,7 @@ module.exports = async (req, res) => {
 
     // Create a Job
     const {
+      job_reference,
       title,
       department,
       description,
@@ -39,6 +42,7 @@ module.exports = async (req, res) => {
     } = req.body || {};
 
     if (
+      !job_reference.trim() ||
       !title?.trim() ||
       !description?.trim() ||
       !location?.trim() ||
@@ -47,7 +51,7 @@ module.exports = async (req, res) => {
       return res.status(400).json({
         success: false,
         message:
-          "Title, description, location and employment type are required",
+          "Job reference, title, description, location and employment type are required",
       });
     }
 
@@ -65,11 +69,6 @@ module.exports = async (req, res) => {
       });
     }
 
-    const jobReference = `ELT-${new Date().getFullYear()}-${crypto
-      .randomBytes(3)
-      .toString("hex")
-      .toUpperCase()}`;
-
     const result = await pool.query(
       `INSERT INTO jobs (
         job_reference,
@@ -85,7 +84,7 @@ module.exports = async (req, res) => {
       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
       RETURNING *`,
       [
-        jobReference,
+        job_reference.trim(),
         title.trim(),
         department?.trim() || null,
         description.trim(),
@@ -104,6 +103,13 @@ module.exports = async (req, res) => {
     });
   } catch (error) {
     console.error("Admin jobs API error:", error.message);
+
+    if (error.code === "23505") {
+      return res.status(400).json({
+        success: false,
+        message: "This job reference already exists",
+      });
+    }
 
     return res.status(500).json({
       success: false,

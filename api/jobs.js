@@ -1,6 +1,9 @@
 const pool = require("../lib/db");
+const { applyCors } = require("../lib/cors");
 
 module.exports = async (req, res) => {
+  if (!applyCors(req, res)) return;
+
   if (req.method !== "GET") {
     return res.status(405).json({
       success: false,
